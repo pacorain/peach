@@ -1,0 +1,40 @@
+# Wifi config
+#
+# I may eventually split this for nodes I don't want to spin up an AP.
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  ap:
+    ssid: "$friendly_name Setup"
+    password: !secret ap_password
+
+# Enable captive portal
+captive_portal:
+
+# Create diagnostic sensors for WiFi
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "$friendly_name IP Address"
+      entity_category: diagnostic
+    ssid:
+      name: "$friendly_name SSID"
+      entity_category: diagnostic
+    bssid:
+      name: "$friendly_name BSSID"
+      entity_category: diagnostic
+
+sensor:
+  - platform: wifi_signal
+    name: "$friendly_name WiFi Signal"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: diagnostic
+
+binary_sensor:
+  - platform: status
+    name: "$friendly_name Connection"
+    id: wifi_status
+    entity_category: diagnostic

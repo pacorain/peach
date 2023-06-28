@@ -1,0 +1,8 @@
+api:
+  encryption:
+    key: !secret api_encryption_key
+  id: base_api
+
+ota:
+  password: !secret ota_password
+  id: base_ota

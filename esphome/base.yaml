@@ -1,0 +1,12 @@
+# Base config for most ESPHome devices
+#
+# 
+esphome:
+  name: $device_name
+  comment: $friendly_name
+
+
+packages:
+  hass_time: !include packages/time.yaml
+  home_assistant: !include packages/home_assistant.yaml
+  wifi_fully: !include packages/wifi_full.yaml

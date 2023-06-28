@@ -1,0 +1,109 @@
+# Generic start for Sonoff S31 devices
+
+# Includes power monitoring and automatic shutdown
+#
+# By default, it will turn off the relay if the current exceeds 15A.
+
+substitutions:
+  amp_limit: "15.0"
+
+packages:
+  base: !include ../base.yaml
+
+esp8266:
+  board: esp01_1m
+
+logger:
+  baud_rate: 0  # UART logging interferes with power monitoring
+
+uart:
+  rx_pin: RX
+  baud_rate: 4800
+
+binary_sensor:
+  # Power button on the side of the device
+  - id: button
+    platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: relay
+    internal: True
+  # Virtual circuit breaker
+  - platform: template
+    id: breaker
+    name: "$friendly_name Breaker Tripped"
+    device_class: problem
+    on_press:
+      - switch.turn_off: relay
+      - light.turn_on: 
+          id: led
+          effect: Breaker Tripped
+    on_release:
+      then:
+        - light.turn_off: led
+
+sensor:
+  # Power monitoring
+  - platform: cse7766
+    update_interval: 1s
+    current:
+      name: "$friendly_name Current"
+      accuracy_decimals: 3
+      state_class: measurement
+      on_value_range:
+        - above: $amp_limit
+          then:
+            - binary_sensor.template.publish: 
+                id: breaker
+                state: ON
+    voltage:
+      name: "$friendly_name Voltage"
+      accuracy_decimals: 1
+      state_class: measurement
+    power:
+      name: "$friendly_name Power"
+      accuracy_decimals: 1
+      state_class: measurement
+      id: power
+  - platform: total_daily_energy
+    name: "$friendly_name Energy Today"
+    power_id: power
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    accuracy_decimals: 3
+    state_class: total_increasing
+
+switch:
+  # Relay
+  - platform: gpio
+    id: relay
+    name: "$friendly_name"
+    pin: GPIO12
+    restore_mode: ALWAYS_ON
+    on_turn_on:
+      - binary_sensor.template.publish:
+          id: breaker
+          state: OFF
+
+light:
+  - platform: status_led
+    pin:
+      number: GPIO13
+      inverted: True
+    id: led
+    internal: True
+    effects:
+      - lambda:
+          name: Breaker Tripped
+          update_interval: 250ms
+          lambda: |-
+            static bool state = false;
+            auto call = id(led).turn_on();
+            /* Turning off the light resets the effect, so we need to set the brightness */
+            call.set_brightness(state ? 0.0f : 1.0f);
+            call.perform();
+            state = !state;

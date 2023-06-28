@@ -1,0 +1,8 @@
+**
+!*.yaml
+secrets.yaml
+!secrets.yaml.tpl
+!README.md
+!.gitignore
+
+!esphome

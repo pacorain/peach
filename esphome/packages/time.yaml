@@ -1,0 +1,5 @@
+# Allows automating based on time of day.
+
+time:
+  platform: homeassistant
+  id: hass_time
