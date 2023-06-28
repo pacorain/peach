@@ -55,3 +55,19 @@ switch:
         - lambda: |-
             id(stop_time) = 0;
         
+text_sensor:
+  # Human-friendly time remaining sensor
+  - platform: template
+    name: "Dehydrator Time Remaining"
+    update_interval: 60s
+    lambda: |-
+      if (id(stop_time) == 0) {
+        return {"Off"};
+      }
+      int remaining = id(stop_time) - id(hass_time).now().timestamp;
+      if (remaining < 0) {
+        return {"Off"};
+      }
+      int hours = remaining / 3600;
+      int minutes = (remaining % 3600) / 60;
+      return {hours + ":" + minutes};
